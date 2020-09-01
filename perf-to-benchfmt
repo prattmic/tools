@@ -1,0 +1,43 @@
+#!/usr/bin/env -S awk -f
+
+# perf-to-benchfmt
+#
+# Convert `perf stat` output to Go's benchfmt format.
+
+function print_benchmark(name, val, unit) {
+	printf("BenchmarkPerf-%-20s %10d %20f %s\n", name, 1, val, unit)
+}
+
+# Unitless stat. Format:
+#          1,291,018      cycles                    #    1.167 GHz
+/^\s+[0-9,\.]+\s+[a-z-]+\s+#.*$/ {
+	# Extract value and remove commas so we can treat as a number.
+	val=$1
+	gsub(",", "", val)
+
+	unit="val"
+	name=$2
+
+	print_benchmark(name, val, unit)
+	next
+}
+
+# Stat with unit. Format:
+#               1.11 msec task-clock                #    0.001 CPUs utilized
+/^\s+[0-9,\.]+\s+[a-z]+\s+[a-z-]+\s+#.*$/ {
+	# Extract value and remove commas so we can treat as a number.
+	val=$1
+	gsub(",", "", val)
+
+	unit=$2
+	name=$3
+
+	print_benchmark(name, val, unit)
+	next
+}
+
+# Print unmatched lines as-is. Note this depends on the blocks above skipping
+# to the next line.
+{
+	print
+}
