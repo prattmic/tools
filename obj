@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Better objdump defaults!
+#
+# Adds relocations, jump visualization, and automatic pipe to less.
+#
+# Pass -s to switch to "simple" mode with no colors or less.
+
+simple=0
+while getopts "s" opt
+do
+  case "${opt}" in
+    "s") simple=1;;
+    ?) echo "Usage: $0 [-s] filename"; exit 1;;
+  esac
+done
+shift "$(($OPTIND - 1))"
+
+if [[ ${simple} != 0 ]]; then
+  objdump -d --reloc --visualize-jumps $@
+else
+  objdump -d --reloc --visualize-jumps=extended-color $@ | less -R
+fi
